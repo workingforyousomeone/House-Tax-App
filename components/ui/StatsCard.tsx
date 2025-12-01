@@ -15,7 +15,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   value, 
   icon, 
   trend, 
-  colorClass = "bg-emerald-500/10",
+  colorClass = "bg-blue-500/10",
   onClick 
 }) => {
   return (
@@ -29,7 +29,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
         <div className="flex flex-col">
            <h3 className="text-white/60 text-xs md:text-sm font-medium uppercase tracking-wider">{title}</h3>
            {trend && (
-            <span className="text-[10px] text-emerald-400 font-medium">
+            <span className="text-[10px] text-blue-400 font-medium">
                 {trend}
             </span>
            )}

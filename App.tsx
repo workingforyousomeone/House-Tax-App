@@ -48,14 +48,14 @@ function App() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#001e0f] font-sans">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#0f172a] font-sans">
       
-      {/* Dynamic Background Layer */}
+      {/* Dynamic Background Layer - Blue/Violet Theme */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#001e0f] via-[#022c19] to-[#0f3d2a]" />
-        <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[100px] animate-blob mix-blend-screen" />
-        <div className="absolute top-[40%] right-[-5%] w-[400px] h-[400px] bg-teal-600/20 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-screen" />
-        <div className="absolute bottom-[-10%] left-[30%] w-[600px] h-[600px] bg-green-600/10 rounded-full blur-[120px] animate-blob animation-delay-4000 mix-blend-screen" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#172554]" />
+        <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-600/30 rounded-full blur-[100px] animate-blob mix-blend-screen" />
+        <div className="absolute top-[40%] right-[-5%] w-[400px] h-[400px] bg-violet-600/30 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-screen" />
+        <div className="absolute bottom-[-10%] left-[30%] w-[600px] h-[600px] bg-cyan-600/20 rounded-full blur-[120px] animate-blob animation-delay-4000 mix-blend-screen" />
         <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay" 
              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
         </div>

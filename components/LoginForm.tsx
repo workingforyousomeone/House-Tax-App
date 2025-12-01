@@ -3,7 +3,6 @@ import { User as UserIcon, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Input } from './ui/Input';
 import { LoginCredentials } from '../types';
-import { USERS } from '../data/mockData';
 
 interface LoginFormProps {
   onLogin: (creds: LoginCredentials) => void;
@@ -27,11 +26,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading, error 
       <div className="animate-fade-in relative z-10">
         <GlassCard className="p-8 md:p-12">
           <div className="text-center mb-8">
-            <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 mb-5 ring-1 ring-white/20 shadow-xl">
-              <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-xl"></div>
+            <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 mb-5 ring-1 ring-white/20 shadow-xl">
+              <div className="absolute inset-0 rounded-full bg-blue-500/10 blur-xl"></div>
               <UserIcon className="w-8 h-8 text-white relative z-10" />
             </div>
-            <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 mb-2 tracking-tight">
+            <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-100 mb-2 tracking-tight">
               House Tax App
             </h2>
             <p className="text-white/40 text-sm font-light">Enter credentials to manage clusters</p>
@@ -71,11 +70,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading, error 
                 disabled={isLoading}
                 className="
                   w-full group relative
-                  bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500
+                  bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500
                   bg-[length:200%_auto] hover:bg-right
                   text-white font-semibold py-4 px-4 rounded-xl
-                  shadow-[0_0_20px_rgba(16,185,129,0.3)]
-                  hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]
+                  shadow-[0_0_20px_rgba(37,99,235,0.3)]
+                  hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]
                   transition-all duration-500
                   disabled:opacity-70 disabled:cursor-not-allowed
                   overflow-hidden

@@ -11,7 +11,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', 
       className={`
         relative overflow-hidden
         bg-white/5 backdrop-blur-2xl backdrop-saturate-150
-        border border-white/20 
+        border border-white/10
         shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] 
         rounded-3xl 
         ${className}
@@ -24,10 +24,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', 
       />
       
       {/* Top shine edge */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent z-10" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200/20 to-transparent z-10" />
       
-      {/* Subtle gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10 pointer-events-none z-0" />
+      {/* Subtle blue gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-black/20 pointer-events-none z-0" />
       
       <div className="relative z-10 h-full">
         {children}

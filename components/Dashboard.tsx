@@ -21,7 +21,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Data Filtering
-  // For Admin: Get all unique clusters from the USERS list to ensure we show every cluster (even empty ones like C19-C32)
   const accessibleClusters = user.role === 'ADMIN' 
     ? Array.from(new Set(USERS.flatMap(u => u.clusters))).sort((a, b) => {
         const numA = parseInt(a.replace('C', ''));
@@ -71,8 +70,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <StatsCard 
             title="Households" 
             value={totalStats.households} 
-            icon={<Home className="text-sky-400" size={18} />}
-            colorClass="bg-sky-500/20"
+            icon={<Home className="text-blue-400" size={18} />}
+            colorClass="bg-blue-500/20"
           />
           <StatsCard 
             title="Demand" 
@@ -83,8 +82,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <StatsCard 
             title="Collected" 
             value={`₹${totalStats.collected.toLocaleString()}`}
-            icon={<IndianRupee className="text-emerald-400" size={18} />}
-            colorClass="bg-emerald-500/20"
+            icon={<IndianRupee className="text-cyan-400" size={18} />}
+            colorClass="bg-cyan-500/20"
           />
           <StatsCard 
             title="Pending" 
@@ -97,7 +96,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         {/* Cluster Grid */}
         <div>
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2 px-1">
-            <Layers size={18} className="text-emerald-500" /> 
+            <Layers size={18} className="text-blue-500" /> 
             {user.role === 'ADMIN' ? 'All Clusters' : 'Your Clusters'}
           </h2>
           
@@ -111,13 +110,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               return (
                 <GlassCard 
                   key={cluster} 
-                  className="group hover:bg-white/10 cursor-pointer transition-all duration-300 relative overflow-hidden p-3 md:p-4"
+                  className="group hover:bg-blue-600/20 cursor-pointer transition-all duration-300 relative overflow-hidden p-3 md:p-4"
                   onClick={() => handleClusterClick(cluster)}
                 >
                    <div className="relative z-10 flex flex-col h-full justify-between">
                       <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-lg font-bold text-white">{cluster}</h3>
-                          <div className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-white/60 font-medium">
+                          <h3 className="text-lg font-bold text-white group-hover:text-blue-200 transition-colors">{cluster}</h3>
+                          <div className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-white/60 font-medium group-hover:bg-blue-500/20 group-hover:text-blue-100 transition-colors">
                              {clusterHouses.length} H
                           </div>
                       </div>
@@ -165,7 +164,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
              </div>
 
-             <div className="hidden md:flex items-center gap-4 justify-end bg-white/5 p-3 rounded-xl">
+             <div className="hidden md:flex items-center gap-4 justify-end bg-white/5 p-3 rounded-xl border border-white/5">
                  <div className="text-right">
                      <p className="text-xs text-white/40 uppercase">Cluster Total</p>
                      <p className="text-lg text-white font-bold">₹{clusterTotal.toLocaleString()}</p>
@@ -210,9 +209,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                                 <tr 
                                     key={house.assessmentNo} 
                                     onClick={() => handleHouseholdClick(house)}
-                                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
+                                    className="border-b border-white/5 hover:bg-blue-500/10 transition-colors cursor-pointer group"
                                 >
-                                    <td className="py-3 px-2 font-medium text-white group-hover:text-emerald-300 transition-colors whitespace-nowrap">
+                                    <td className="py-3 px-2 font-medium text-white group-hover:text-blue-300 transition-colors whitespace-nowrap">
                                         {house.assessmentNo}
                                     </td>
                                     <td className="py-3 px-2 text-white/80 max-w-[150px] truncate">{house.ownerName}</td>
@@ -241,10 +240,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2">
             Tax App
             {user.role === 'ADMIN' && (
-                <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold self-center">ADMIN</span>
+                <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold self-center shadow-[0_0_10px_rgba(37,99,235,0.5)]">ADMIN</span>
             )}
           </h1>
-          <p className="text-gray-400 text-xs md:text-sm mt-0.5 truncate max-w-[200px] md:max-w-none">
+          <p className="text-blue-200/60 text-xs md:text-sm mt-0.5 truncate max-w-[200px] md:max-w-none">
             {user.name}
           </p>
         </div>

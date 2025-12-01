@@ -10,8 +10,7 @@ interface HouseholdDetailProps {
 
 export const HouseholdDetail: React.FC<HouseholdDetailProps> = ({ household, onBack }) => {
   const pending = household.totalTax - household.taxCollected;
-  const isPaid = pending <= 0;
-
+  
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center gap-4 mb-6">
@@ -31,7 +30,7 @@ export const HouseholdDetail: React.FC<HouseholdDetailProps> = ({ household, onB
         {/* Main Info */}
         <GlassCard className="p-6 md:col-span-2">
             <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                <User size={18} className="text-pink-400" /> Owner Details
+                <User size={18} className="text-blue-400" /> Owner Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -62,16 +61,16 @@ export const HouseholdDetail: React.FC<HouseholdDetailProps> = ({ household, onB
         {/* Tax Status */}
         <GlassCard className="p-6 bg-gradient-to-b from-white/5 to-white/0">
             <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                <IndianRupee size={18} className="text-green-400" /> Tax Summary
+                <IndianRupee size={18} className="text-cyan-400" /> Tax Summary
             </h3>
             <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
                     <span className="text-white/60 text-sm">Total Demand</span>
                     <span className="text-white font-bold">₹{household.totalTax.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <span className="text-green-200 text-sm">Collected</span>
-                    <span className="text-green-400 font-bold">₹{household.taxCollected.toLocaleString()}</span>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                    <span className="text-cyan-200 text-sm">Collected</span>
+                    <span className="text-cyan-400 font-bold">₹{household.taxCollected.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                     <span className="text-red-200 text-sm">Pending</span>
