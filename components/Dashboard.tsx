@@ -5,7 +5,7 @@ import { StatsCard } from './ui/StatsCard';
 import { HouseholdDetail } from './HouseholdDetail';
 import { Input } from './ui/Input';
 import { User, Household } from '../types';
-import { HOUSEHOLDS } from '../data/mockData';
+import { HOUSEHOLDS, USERS } from '../data/mockData';
 
 interface DashboardProps {
   user: User;
@@ -21,9 +21,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Data Filtering
+  // For Admin: Get all unique clusters from the USERS list to ensure we show every cluster (even empty ones like C19-C32)
   const accessibleClusters = user.role === 'ADMIN' 
-    ? Array.from(new Set(HOUSEHOLDS.map(h => h.clusterNo))).sort((a, b) => {
-        // Sort specifically for C1, C2, C10 logic to avoid C1, C10, C11 ordering
+    ? Array.from(new Set(USERS.flatMap(u => u.clusters))).sort((a, b) => {
         const numA = parseInt(a.replace('C', ''));
         const numB = parseInt(b.replace('C', ''));
         return numA - numB;
@@ -71,28 +71,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <StatsCard 
             title="Households" 
             value={totalStats.households} 
-            icon={<Home className="text-blue-400" size={18} />}
-            colorClass="bg-blue-500/20"
+            icon={<Home className="text-sky-400" size={18} />}
+            colorClass="bg-sky-500/20"
           />
           <StatsCard 
             title="Demand" 
-            value={`₹${(totalStats.totalTax / 100000).toFixed(2)}L`}
-            subValue={`₹${totalStats.totalTax.toLocaleString()}`}
+            value={`₹${totalStats.totalTax.toLocaleString()}`}
             icon={<IndianRupee className="text-white" size={18} />}
             colorClass="bg-white/10"
           />
           <StatsCard 
             title="Collected" 
-            value={`₹${(totalStats.collected / 100000).toFixed(2)}L`}
-            subValue={`₹${totalStats.collected.toLocaleString()}`}
-            icon={<IndianRupee className="text-green-400" size={18} />}
-            colorClass="bg-green-500/20"
-            trend={`${((totalStats.collected / totalStats.totalTax) * 100).toFixed(1)}%`}
+            value={`₹${totalStats.collected.toLocaleString()}`}
+            icon={<IndianRupee className="text-emerald-400" size={18} />}
+            colorClass="bg-emerald-500/20"
           />
           <StatsCard 
             title="Pending" 
-            value={`₹${(totalStats.pending / 100000).toFixed(2)}L`}
-            subValue={`₹${totalStats.pending.toLocaleString()}`}
+            value={`₹${totalStats.pending.toLocaleString()}`}
             icon={<IndianRupee className="text-red-400" size={18} />}
             colorClass="bg-red-500/20"
           />
@@ -101,7 +97,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         {/* Cluster Grid */}
         <div>
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2 px-1">
-            <Layers size={18} className="text-pink-500" /> 
+            <Layers size={18} className="text-emerald-500" /> 
             {user.role === 'ADMIN' ? 'All Clusters' : 'Your Clusters'}
           </h2>
           
@@ -130,10 +126,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                           <div className="flex justify-between text-xs">
                               <span className="text-white/40">Dem</span>
                               <span className="text-white font-medium">₹{(clusterTotal/1000).toFixed(1)}k</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                              <span className="text-white/40">Col</span>
-                              <span className="text-green-300 font-medium">₹{(clusterCollected/1000).toFixed(1)}k</span>
                           </div>
                            <div className="flex justify-between text-xs">
                               <span className="text-white/40">Pen</span>
@@ -203,12 +195,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             </div>
 
             <div className="overflow-x-auto -mx-4 md:mx-0">
-                <table className="w-full text-left border-collapse min-w-[600px]">
+                <table className="w-full text-left border-collapse min-w-[350px] md:min-w-[600px]">
                     <thead>
                         <tr className="text-xs text-white/40 uppercase border-b border-white/10">
-                            <th className="py-3 px-4">Assess No</th>
-                            <th className="py-3 px-4">Owner</th>
-                            <th className="py-3 px-4 text-right">Total</th>
+                            {/* Adjusted width to strict minimum and reduced padding */}
+                            <th className="py-3 px-2 w-[1%] whitespace-nowrap">Assess No</th>
+                            <th className="py-3 px-2">Owner</th>
+                            <th className="py-3 px-2 text-right">Total</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm">
@@ -219,11 +212,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                                     onClick={() => handleHouseholdClick(house)}
                                     className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
                                 >
-                                    <td className="py-3 px-4 font-medium text-white group-hover:text-pink-300 transition-colors">
+                                    <td className="py-3 px-2 font-medium text-white group-hover:text-emerald-300 transition-colors whitespace-nowrap">
                                         {house.assessmentNo}
                                     </td>
-                                    <td className="py-3 px-4 text-white/80 max-w-[150px] truncate">{house.ownerName}</td>
-                                    <td className="py-3 px-4 text-right text-white/80">₹{house.totalTax.toLocaleString()}</td>
+                                    <td className="py-3 px-2 text-white/80 max-w-[150px] truncate">{house.ownerName}</td>
+                                    <td className="py-3 px-2 text-right text-white/80">₹{house.totalTax.toLocaleString()}</td>
                                 </tr>
                             );
                         })}
@@ -231,7 +224,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </table>
                 {housesInCluster.length === 0 && (
                     <div className="text-center py-12 text-white/30">
-                        No households found.
+                        No households found in this cluster.
                     </div>
                 )}
             </div>
@@ -248,7 +241,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2">
             Tax App
             {user.role === 'ADMIN' && (
-                <span className="text-[10px] bg-pink-500 text-white px-2 py-0.5 rounded-full font-bold self-center">ADMIN</span>
+                <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold self-center">ADMIN</span>
             )}
           </h1>
           <p className="text-gray-400 text-xs md:text-sm mt-0.5 truncate max-w-[200px] md:max-w-none">
