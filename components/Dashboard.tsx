@@ -193,14 +193,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
             </div>
 
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-                <table className="w-full text-left border-collapse min-w-[350px] md:min-w-[600px]">
+            <div className="-mx-4 md:mx-0">
+                <table className="w-full text-left border-collapse table-fixed">
                     <thead>
                         <tr className="text-xs text-white/40 uppercase border-b border-white/10">
-                            {/* Adjusted width to strict minimum and reduced padding */}
-                            <th className="py-3 px-2 w-[1%] whitespace-nowrap">Assess No</th>
-                            <th className="py-3 px-2">Owner</th>
-                            <th className="py-3 px-2 text-right">Total</th>
+                            {/* Adjusted width for fixed table layout to prevent scroll */}
+                            <th className="py-3 pl-4 pr-1 w-[105px] md:w-auto whitespace-nowrap">Assess No</th>
+                            <th className="py-3 px-1 w-auto">Owner</th>
+                            <th className="py-3 pl-1 pr-4 w-[70px] md:w-auto text-right">Total</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm">
@@ -211,11 +211,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                                     onClick={() => handleHouseholdClick(house)}
                                     className="border-b border-white/5 hover:bg-blue-500/10 transition-colors cursor-pointer group"
                                 >
-                                    <td className="py-3 px-2 font-medium text-white group-hover:text-blue-300 transition-colors whitespace-nowrap">
+                                    <td className="py-3 pl-4 pr-1 font-medium text-white group-hover:text-blue-300 transition-colors whitespace-nowrap text-xs md:text-sm">
                                         {house.assessmentNo}
                                     </td>
-                                    <td className="py-3 px-2 text-white/80 max-w-[150px] truncate">{house.ownerName}</td>
-                                    <td className="py-3 px-2 text-right text-white/80">₹{house.totalTax.toLocaleString()}</td>
+                                    <td className="py-3 px-1 text-white/80 truncate">
+                                        {house.ownerName}
+                                    </td>
+                                    <td className="py-3 pl-1 pr-4 text-right text-white/80 text-xs md:text-sm">
+                                        ₹{house.totalTax.toLocaleString()}
+                                    </td>
                                 </tr>
                             );
                         })}

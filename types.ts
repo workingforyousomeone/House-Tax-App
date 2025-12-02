@@ -45,6 +45,19 @@ export interface Household {
   
   // Floor Details
   floors: FloorDetail[];
+
+  // New Property Details
+  natureOfProperty: string;
+  natureOfLandUse: string;
+  natureOfUsage: string;
+  natureOfOwnership: string;
+  modeOfAcquisition: string;
+
+  // Boundaries
+  boundaryEast: string;
+  boundaryWest: string;
+  boundaryNorth: string;
+  boundarySouth: string;
 }
 
 export interface AuthState {
