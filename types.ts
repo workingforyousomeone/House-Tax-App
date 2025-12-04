@@ -60,6 +60,30 @@ export interface Household {
   boundarySouth: string;
 }
 
+export interface CollectionRecord {
+  sNo: string;
+  assessmentNo: string;
+  oldAssessmentNo: string;
+  ownerName: string;
+  doorNo: string;
+  dateOfPayment: string;
+  receiptNo: string;
+  paymentSource: string;
+  paymentMode: string;
+  dueYear: string;
+  demandCategory: string;
+  houseTax: number;
+  libraryCess: number;
+  waterTax: number;
+  lightningTax: number;
+  drainageTax: number;
+  sportsCess: number;
+  fireTax: number;
+  totalTax: number;
+  receiptStatus: string;
+  settlementStatus: string;
+}
+
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;

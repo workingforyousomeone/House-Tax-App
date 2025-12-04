@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Ruler, IndianRupee, Phone, User, Compass, Map, Building2, ScrollText, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Ruler, IndianRupee, Phone, User, Compass, Map, Building2, ScrollText, ChevronDown, Receipt } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Household } from '../types';
+import { COLLECTION_RECORDS } from '../data/mockData';
 
 interface HouseholdDetailProps {
   household: Household;
@@ -66,6 +67,7 @@ const ExpandableSection: React.FC<ExpandableSectionProps> = ({ title, icon, chil
 
 export const HouseholdDetail: React.FC<HouseholdDetailProps> = ({ household, onBack }) => {
   const pending = household.totalTax - household.taxCollected;
+  const householdPayments = COLLECTION_RECORDS.filter(record => record.assessmentNo === household.assessmentNo);
   
   return (
     <div className="animate-fade-in w-full max-w-4xl mx-auto pb-20">
@@ -170,6 +172,53 @@ export const HouseholdDetail: React.FC<HouseholdDetailProps> = ({ household, onB
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </ExpandableSection>
+
+        {/* Payment History Section */}
+        <ExpandableSection 
+            title="Payment History" 
+            icon={<Receipt />}
+        >
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
+                    <thead className="bg-white/5">
+                        <tr className="text-xs text-white/40 uppercase">
+                            <th className="py-3 px-4">Date</th>
+                            <th className="py-3 px-4">Receipt No</th>
+                            <th className="py-3 px-4">Due Year</th>
+                            <th className="py-3 px-4">Category</th>
+                            <th className="py-3 px-4 text-right">Amount</th>
+                            <th className="py-3 px-4 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-sm">
+                        {householdPayments.length > 0 ? (
+                            householdPayments.map((record, index) => (
+                                <tr key={index} className="hover:bg-white/5 transition-colors">
+                                    <td className="py-3 px-4 text-white">{record.dateOfPayment}</td>
+                                    <td className="py-3 px-4 text-white/70 font-mono text-xs">{record.receiptNo}</td>
+                                    <td className="py-3 px-4 text-white/70">{record.dueYear}</td>
+                                    <td className="py-3 px-4">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${record.demandCategory === 'Current' ? 'bg-blue-500/20 text-blue-300' : 'bg-orange-500/20 text-orange-300'}`}>
+                                            {record.demandCategory}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-right text-white font-mono">₹{record.totalTax}</td>
+                                    <td className="py-3 px-4 text-center">
+                                         <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${record.receiptStatus === 'Success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                                            {record.receiptStatus}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={6} className="py-8 text-center text-white/30 italic">No payment records found</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
         </ExpandableSection>
 

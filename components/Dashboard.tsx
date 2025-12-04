@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Home, Layers, IndianRupee, Users, ArrowRight, Search, ArrowLeft } from 'lucide-react';
+import { LogOut, Home, Layers, IndianRupee, Users, ArrowRight, Search, ArrowLeft, Fingerprint, Smartphone, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { StatsCard } from './ui/StatsCard';
 import { HouseholdDetail } from './HouseholdDetail';
@@ -63,6 +63,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   // Render Logic
   const renderDashboard = () => {
+    // --- Data Quality / Duplication Logic ---
+    const calculateDuplicationStats = (data: Household[], key: keyof Household) => {
+        // Filter out empty, null, undefined, or extremely short values (likely placeholders)
+        const missing = data.filter(h => !h[key] || h[key] === '' || String(h[key]).length < 5).length;
+        
+        // Get list of valid values
+        const validValues = data
+            .filter(h => h[key] && h[key] !== '' && String(h[key]).length >= 5)
+            .map(h => String(h[key]));
+
+        // Count frequency of each value
+        const freqMap: Record<string, number> = {};
+        validValues.forEach(val => {
+            freqMap[val] = (freqMap[val] || 0) + 1;
+        });
+
+        const counts = Object.values(freqMap);
+
+        return {
+            missing,
+            one: counts.filter(c => c === 1).length,
+            two: counts.filter(c => c === 2).length,
+            three: counts.filter(c => c === 3).length,
+            four: counts.filter(c => c === 4).length,
+            fivePlus: counts.filter(c => c >= 5).length,
+        };
+    };
+
+    const aadhaarStats = calculateDuplicationStats(filteredHouseholds, 'aadhaarNo');
+    const mobileStats = calculateDuplicationStats(filteredHouseholds, 'phoneNo');
+
     return (
       <div className="animate-fade-in space-y-4 md:space-y-8 w-full">
         {/* Top Stats Row - Grid 2x2 on mobile to save vertical space */}
@@ -91,6 +122,105 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             icon={<IndianRupee className="text-red-400" size={18} />}
             colorClass="bg-red-500/20"
           />
+        </div>
+
+        {/* Data Insights Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Aadhaar Stats Card */}
+            <GlassCard className="p-4 md:p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300">
+                        <Fingerprint size={20} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">Aadhaar Coverage</h3>
+                </div>
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/10">
+                         <div className="flex items-center gap-2 text-red-200">
+                            <AlertCircle size={16} />
+                            <span className="text-sm font-medium">Not having Aadhaar</span>
+                         </div>
+                         <span className="text-lg font-bold text-red-400">{aadhaarStats.missing}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">1 HH per Aadhaar</p>
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 size={14} className="text-green-400" />
+                                <span className="text-lg font-bold text-white">{aadhaarStats.one}</span>
+                            </div>
+                        </div>
+                         <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">2 HH per Aadhaar</p>
+                            <div className="flex items-center gap-2">
+                                <Users size={14} className="text-blue-400" />
+                                <span className="text-lg font-bold text-white">{aadhaarStats.two}</span>
+                            </div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">3 HH per Aadhaar</p>
+                            <span className="text-lg font-bold text-white">{aadhaarStats.three}</span>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">4 HH per Aadhaar</p>
+                            <span className="text-lg font-bold text-white">{aadhaarStats.four}</span>
+                        </div>
+                        <div className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5 flex justify-between items-center">
+                            <p className="text-[10px] text-white/40 uppercase">5+ HH per Aadhaar</p>
+                            <span className="text-lg font-bold text-white">{aadhaarStats.fivePlus}</span>
+                        </div>
+                    </div>
+                </div>
+            </GlassCard>
+
+            {/* Mobile Stats Card */}
+            <GlassCard className="p-4 md:p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
+                        <Smartphone size={20} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">Mobile Coverage</h3>
+                </div>
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/10">
+                         <div className="flex items-center gap-2 text-red-200">
+                            <AlertCircle size={16} />
+                            <span className="text-sm font-medium">Not having Mobile</span>
+                         </div>
+                         <span className="text-lg font-bold text-red-400">{mobileStats.missing}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">1 HH per Mobile</p>
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 size={14} className="text-green-400" />
+                                <span className="text-lg font-bold text-white">{mobileStats.one}</span>
+                            </div>
+                        </div>
+                         <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">2 HH per Mobile</p>
+                            <div className="flex items-center gap-2">
+                                <Users size={14} className="text-blue-400" />
+                                <span className="text-lg font-bold text-white">{mobileStats.two}</span>
+                            </div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">3 HH per Mobile</p>
+                            <span className="text-lg font-bold text-white">{mobileStats.three}</span>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                            <p className="text-[10px] text-white/40 uppercase mb-1">4 HH per Mobile</p>
+                            <span className="text-lg font-bold text-white">{mobileStats.four}</span>
+                        </div>
+                        <div className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5 flex justify-between items-center">
+                            <p className="text-[10px] text-white/40 uppercase">5+ HH per Mobile</p>
+                            <span className="text-lg font-bold text-white">{mobileStats.fivePlus}</span>
+                        </div>
+                    </div>
+                </div>
+            </GlassCard>
         </div>
 
         {/* Cluster Grid */}
