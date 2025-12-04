@@ -12,13 +12,17 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type ViewState = 'DASHBOARD' | 'CLUSTER_VIEW' | 'HOUSEHOLD_DETAIL';
+type ViewState = 'DASHBOARD' | 'CLUSTER_VIEW' | 'HOUSEHOLD_DETAIL' | 'DATA_FILTER_VIEW';
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [currentView, setCurrentView] = useState<ViewState>('DASHBOARD');
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // State for Data Insight Filter View
+  const [filterTitle, setFilterTitle] = useState('');
+  const [filteredData, setFilteredData] = useState<Household[]>([]);
 
   // Data Filtering
   const accessibleClusters = user.role === 'ADMIN' 
@@ -53,50 +57,79 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const handleBack = () => {
     if (currentView === 'HOUSEHOLD_DETAIL') {
-      setCurrentView('CLUSTER_VIEW');
-      setSelectedHousehold(null);
-    } else {
+       // Check history logic roughly
+       if (selectedCluster) {
+           setCurrentView('CLUSTER_VIEW');
+       } else if (filterTitle) {
+           setCurrentView('DATA_FILTER_VIEW');
+       } else {
+           setCurrentView('DASHBOARD');
+       }
+       setSelectedHousehold(null);
+    } else if (currentView === 'CLUSTER_VIEW') {
       setCurrentView('DASHBOARD');
       setSelectedCluster(null);
+    } else if (currentView === 'DATA_FILTER_VIEW') {
+      setCurrentView('DASHBOARD');
+      setFilterTitle('');
+      setFilteredData([]);
     }
+  };
+
+  const getHouseholdsByCount = (key: 'aadhaarNo' | 'phoneNo', countType: 'missing' | number) => {
+      if (countType === 'missing') {
+          return filteredHouseholds.filter(h => !h[key] || h[key] === '' || String(h[key]).length < 5);
+      }
+      
+      const validHouseholds = filteredHouseholds.filter(h => h[key] && h[key] !== '' && String(h[key]).length >= 5);
+      const freqMap: Record<string, number> = {};
+      
+      validHouseholds.forEach(h => {
+           const val = String(h[key]);
+           freqMap[val] = (freqMap[val] || 0) + 1;
+      });
+      
+      if (countType === 5) {
+           // 5+ logic
+           return validHouseholds.filter(h => freqMap[String(h[key])] >= 5);
+      }
+      
+      return validHouseholds.filter(h => freqMap[String(h[key])] === countType);
+  };
+
+  const handleInsightClick = (title: string, households: Household[]) => {
+      setFilterTitle(title);
+      setFilteredData(households);
+      setCurrentView('DATA_FILTER_VIEW');
+      setSearchTerm('');
   };
 
   // Render Logic
   const renderDashboard = () => {
-    // --- Data Quality / Duplication Logic ---
-    const calculateDuplicationStats = (data: Household[], key: keyof Household) => {
-        // Filter out empty, null, undefined, or extremely short values (likely placeholders)
-        const missing = data.filter(h => !h[key] || h[key] === '' || String(h[key]).length < 5).length;
-        
-        // Get list of valid values
-        const validValues = data
-            .filter(h => h[key] && h[key] !== '' && String(h[key]).length >= 5)
-            .map(h => String(h[key]));
-
-        // Count frequency of each value
-        const freqMap: Record<string, number> = {};
-        validValues.forEach(val => {
-            freqMap[val] = (freqMap[val] || 0) + 1;
-        });
-
-        const counts = Object.values(freqMap);
+    const calculateDuplicationStats = (key: 'aadhaarNo' | 'phoneNo') => {
+        const missingList = getHouseholdsByCount(key, 'missing');
+        const oneList = getHouseholdsByCount(key, 1);
+        const twoList = getHouseholdsByCount(key, 2);
+        const threeList = getHouseholdsByCount(key, 3);
+        const fourList = getHouseholdsByCount(key, 4);
+        const fivePlusList = getHouseholdsByCount(key, 5);
 
         return {
-            missing,
-            one: counts.filter(c => c === 1).length,
-            two: counts.filter(c => c === 2).length,
-            three: counts.filter(c => c === 3).length,
-            four: counts.filter(c => c === 4).length,
-            fivePlus: counts.filter(c => c >= 5).length,
+            missing: missingList,
+            one: oneList,
+            two: twoList,
+            three: threeList,
+            four: fourList,
+            fivePlus: fivePlusList,
         };
     };
 
-    const aadhaarStats = calculateDuplicationStats(filteredHouseholds, 'aadhaarNo');
-    const mobileStats = calculateDuplicationStats(filteredHouseholds, 'phoneNo');
+    const aadhaarStats = calculateDuplicationStats('aadhaarNo');
+    const mobileStats = calculateDuplicationStats('phoneNo');
 
     return (
       <div className="animate-fade-in space-y-4 md:space-y-8 w-full">
-        {/* Top Stats Row - Grid 2x2 on mobile to save vertical space */}
+        {/* Top Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <StatsCard 
             title="Households" 
@@ -135,41 +168,71 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     <h3 className="text-lg font-semibold text-white">Aadhaar Coverage</h3>
                 </div>
                 <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/10">
-                         <div className="flex items-center gap-2 text-red-200">
-                            <AlertCircle size={16} />
-                            <span className="text-sm font-medium">Not having Aadhaar</span>
-                         </div>
-                         <span className="text-lg font-bold text-red-400">{aadhaarStats.missing}</span>
-                    </div>
+                    {aadhaarStats.missing.length > 0 && (
+                        <div 
+                            onClick={() => handleInsightClick('Not having Aadhaar', aadhaarStats.missing)}
+                            className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/10 cursor-pointer hover:bg-red-500/20 transition-colors"
+                        >
+                             <div className="flex items-center gap-2 text-red-200">
+                                <AlertCircle size={16} />
+                                <span className="text-sm font-medium">Not having Aadhaar</span>
+                             </div>
+                             <span className="text-lg font-bold text-red-400">{aadhaarStats.missing.length}</span>
+                        </div>
+                    )}
                     
                     <div className="grid grid-cols-2 gap-2">
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">1 HH per Aadhaar</p>
-                            <div className="flex items-center gap-2">
-                                <CheckCircle2 size={14} className="text-green-400" />
-                                <span className="text-lg font-bold text-white">{aadhaarStats.one}</span>
+                        {aadhaarStats.one.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('1 HH per Aadhaar', aadhaarStats.one)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">1 HH per Aadhaar</p>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 size={14} className="text-green-400" />
+                                    <span className="text-lg font-bold text-white">{aadhaarStats.one.length}</span>
+                                </div>
                             </div>
-                        </div>
-                         <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">2 HH per Aadhaar</p>
-                            <div className="flex items-center gap-2">
-                                <Users size={14} className="text-blue-400" />
-                                <span className="text-lg font-bold text-white">{aadhaarStats.two}</span>
+                        )}
+                        {aadhaarStats.two.length > 0 && (
+                             <div 
+                                onClick={() => handleInsightClick('2 HH per Aadhaar', aadhaarStats.two)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                             >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">2 HH per Aadhaar</p>
+                                <div className="flex items-center gap-2">
+                                    <Users size={14} className="text-blue-400" />
+                                    <span className="text-lg font-bold text-white">{aadhaarStats.two.length}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">3 HH per Aadhaar</p>
-                            <span className="text-lg font-bold text-white">{aadhaarStats.three}</span>
-                        </div>
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">4 HH per Aadhaar</p>
-                            <span className="text-lg font-bold text-white">{aadhaarStats.four}</span>
-                        </div>
-                        <div className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5 flex justify-between items-center">
-                            <p className="text-[10px] text-white/40 uppercase">5+ HH per Aadhaar</p>
-                            <span className="text-lg font-bold text-white">{aadhaarStats.fivePlus}</span>
-                        </div>
+                        )}
+                        {aadhaarStats.three.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('3 HH per Aadhaar', aadhaarStats.three)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">3 HH per Aadhaar</p>
+                                <span className="text-lg font-bold text-white">{aadhaarStats.three.length}</span>
+                            </div>
+                        )}
+                        {aadhaarStats.four.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('4 HH per Aadhaar', aadhaarStats.four)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">4 HH per Aadhaar</p>
+                                <span className="text-lg font-bold text-white">{aadhaarStats.four.length}</span>
+                            </div>
+                        )}
+                        {aadhaarStats.fivePlus.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('5+ HH per Aadhaar', aadhaarStats.fivePlus)}
+                                className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5 flex justify-between items-center cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase">5+ HH per Aadhaar</p>
+                                <span className="text-lg font-bold text-white">{aadhaarStats.fivePlus.length}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </GlassCard>
@@ -183,41 +246,71 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     <h3 className="text-lg font-semibold text-white">Mobile Coverage</h3>
                 </div>
                 <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/10">
-                         <div className="flex items-center gap-2 text-red-200">
-                            <AlertCircle size={16} />
-                            <span className="text-sm font-medium">Not having Mobile</span>
-                         </div>
-                         <span className="text-lg font-bold text-red-400">{mobileStats.missing}</span>
-                    </div>
+                    {mobileStats.missing.length > 0 && (
+                        <div 
+                            onClick={() => handleInsightClick('Not having Mobile', mobileStats.missing)}
+                            className="flex justify-between items-center p-3 rounded-lg bg-red-500/10 border border-red-500/10 cursor-pointer hover:bg-red-500/20 transition-colors"
+                        >
+                             <div className="flex items-center gap-2 text-red-200">
+                                <AlertCircle size={16} />
+                                <span className="text-sm font-medium">Not having Mobile</span>
+                             </div>
+                             <span className="text-lg font-bold text-red-400">{mobileStats.missing.length}</span>
+                        </div>
+                    )}
                     
                     <div className="grid grid-cols-2 gap-2">
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">1 HH per Mobile</p>
-                            <div className="flex items-center gap-2">
-                                <CheckCircle2 size={14} className="text-green-400" />
-                                <span className="text-lg font-bold text-white">{mobileStats.one}</span>
+                        {mobileStats.one.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('1 HH per Mobile', mobileStats.one)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">1 HH per Mobile</p>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 size={14} className="text-green-400" />
+                                    <span className="text-lg font-bold text-white">{mobileStats.one.length}</span>
+                                </div>
                             </div>
-                        </div>
-                         <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">2 HH per Mobile</p>
-                            <div className="flex items-center gap-2">
-                                <Users size={14} className="text-blue-400" />
-                                <span className="text-lg font-bold text-white">{mobileStats.two}</span>
+                        )}
+                         {mobileStats.two.length > 0 && (
+                             <div 
+                                onClick={() => handleInsightClick('2 HH per Mobile', mobileStats.two)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                             >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">2 HH per Mobile</p>
+                                <div className="flex items-center gap-2">
+                                    <Users size={14} className="text-blue-400" />
+                                    <span className="text-lg font-bold text-white">{mobileStats.two.length}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">3 HH per Mobile</p>
-                            <span className="text-lg font-bold text-white">{mobileStats.three}</span>
-                        </div>
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[10px] text-white/40 uppercase mb-1">4 HH per Mobile</p>
-                            <span className="text-lg font-bold text-white">{mobileStats.four}</span>
-                        </div>
-                        <div className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5 flex justify-between items-center">
-                            <p className="text-[10px] text-white/40 uppercase">5+ HH per Mobile</p>
-                            <span className="text-lg font-bold text-white">{mobileStats.fivePlus}</span>
-                        </div>
+                        )}
+                        {mobileStats.three.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('3 HH per Mobile', mobileStats.three)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">3 HH per Mobile</p>
+                                <span className="text-lg font-bold text-white">{mobileStats.three.length}</span>
+                            </div>
+                        )}
+                        {mobileStats.four.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('4 HH per Mobile', mobileStats.four)}
+                                className="p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase mb-1">4 HH per Mobile</p>
+                                <span className="text-lg font-bold text-white">{mobileStats.four.length}</span>
+                            </div>
+                        )}
+                        {mobileStats.fivePlus.length > 0 && (
+                            <div 
+                                onClick={() => handleInsightClick('5+ HH per Mobile', mobileStats.fivePlus)}
+                                className="col-span-2 p-3 rounded-lg bg-white/5 border border-white/5 flex justify-between items-center cursor-pointer hover:bg-white/10 transition-colors"
+                            >
+                                <p className="text-[10px] text-white/40 uppercase">5+ HH per Mobile</p>
+                                <span className="text-lg font-bold text-white">{mobileStats.fivePlus.length}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </GlassCard>
@@ -269,6 +362,88 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         </div>
       </div>
     );
+  };
+
+  const renderDataFilterView = () => {
+      const displayData = filteredData.filter(h => 
+          h.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          h.assessmentNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          h.aadhaarNo.includes(searchTerm) ||
+          h.phoneNo.includes(searchTerm)
+      );
+
+      const isAadhaarView = filterTitle.toLowerCase().includes('aadhaar');
+      const dynamicHeader = isAadhaarView ? 'Aadhaar No' : 'Mobile No';
+
+      return (
+        <div className="animate-fade-in space-y-4 md:space-y-6 w-full">
+            <div className="flex items-center justify-between">
+                <button onClick={handleBack} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm font-medium p-2 -ml-2">
+                    <ArrowLeft className="" size={18} /> Back to Dashboard
+                </button>
+            </div>
+
+            <GlassCard className="p-4 md:p-6 min-h-[50vh]">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                        {filterTitle} <span className="text-sm font-normal text-white/50 ml-2">({displayData.length} Found)</span>
+                    </h2>
+                    <div className="w-full md:w-72">
+                        <Input 
+                            placeholder="Search in list..." 
+                            icon={<Search size={16}/>} 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="!bg-black/30 !py-2.5 !text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="-mx-4 md:mx-0">
+                    <table className="w-full text-left border-collapse table-fixed">
+                        <thead>
+                            <tr className="text-xs text-white/40 uppercase border-b border-white/10">
+                                <th className="py-3 pl-4 pr-1 w-[95px] md:w-[130px] whitespace-nowrap">Assess No</th>
+                                <th className="py-3 px-1 w-auto">Owner</th>
+                                <th className="py-3 px-1 w-[55px] md:w-[80px] text-center">Cluster</th>
+                                <th className="py-3 pl-1 pr-4 w-[95px] md:w-[130px] text-right">{dynamicHeader}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-sm">
+                            {displayData.map(house => {
+                                const displayValue = isAadhaarView ? house.aadhaarNo : house.phoneNo;
+                                return (
+                                    <tr 
+                                        key={house.assessmentNo} 
+                                        onClick={() => handleHouseholdClick(house)}
+                                        className="border-b border-white/5 hover:bg-blue-500/10 transition-colors cursor-pointer group"
+                                    >
+                                        <td className="py-3 pl-4 pr-1 font-medium text-white group-hover:text-blue-300 transition-colors whitespace-nowrap text-xs md:text-sm">
+                                            {house.assessmentNo}
+                                        </td>
+                                        <td className="py-3 px-1 text-white/80 truncate">
+                                            {house.ownerName}
+                                        </td>
+                                        <td className="py-3 px-1 text-white/60 text-xs md:text-sm text-center">
+                                            {house.clusterNo}
+                                        </td>
+                                        <td className="py-3 pl-1 pr-4 text-right text-white/80 text-xs md:text-sm font-mono">
+                                            {displayValue ? displayValue : <span className="text-red-400/50 italic">Missing</span>}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    {displayData.length === 0 && (
+                        <div className="text-center py-12 text-white/30">
+                            No records found matching search.
+                        </div>
+                    )}
+                </div>
+            </GlassCard>
+        </div>
+      );
   };
 
   const renderClusterView = () => {
@@ -393,6 +568,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       {/* View Switcher */}
       {currentView === 'DASHBOARD' && renderDashboard()}
       {currentView === 'CLUSTER_VIEW' && renderClusterView()}
+      {currentView === 'DATA_FILTER_VIEW' && renderDataFilterView()}
       {currentView === 'HOUSEHOLD_DETAIL' && selectedHousehold && (
         <HouseholdDetail household={selectedHousehold} onBack={handleBack} />
       )}
